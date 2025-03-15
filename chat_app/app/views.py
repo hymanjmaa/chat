@@ -97,8 +97,8 @@ class ChatView(BaseView):
 
     @expose('/execute_script')
     def trigger_script(self):
-        if not current_user.is_authenticated:
-            return redirect(url_for('AuthDBView.login', next=request.url))
+        # if not current_user.is_authenticated:
+        #     return redirect(url_for('AuthDBView.login', next=request.url))
         result = subprocess.run(['python', 'rpa.py'], capture_output=True, text=True)
         output = result.stdout
         error = result.stderr
@@ -107,8 +107,8 @@ class ChatView(BaseView):
     @protect()
     @expose('/action_browser')
     def action_browser(self):
-        if not current_user.is_authenticated:
-            return redirect(url_for('AuthDBView.login', next=request.url))
+        # if not current_user.is_authenticated:
+        #     return redirect(url_for('AuthDBView.login', next=request.url))
         driver = webdriver.Chrome()
         driver.get('https://www.baidu.com')
         search = driver.find_element(By.ID, "kw")
