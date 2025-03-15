@@ -1,6 +1,11 @@
-from flask import render_template, send_from_directory, request, redirect, url_for
+import subprocess
+import time
+
+from flask import render_template, send_from_directory, request, redirect, url_for, jsonify
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder import ModelView, ModelRestApi
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 
 from . import appbuilder, db, app
 from flask_appbuilder import BaseView
@@ -67,30 +72,98 @@ class MyAuthDBView(AuthDBView):
 appbuilder.security_manager_class.auth_view = MyAuthDBView
 
 
-class ChatApi(BaseApi):
-    route_base = '/'
+class ChatView(BaseView):
+    route_base = '/chatview'
+    default_view = 'chat1'
+    allow_browser_login = True
 
-    @expose('chat1')
+    @expose('/chat1')
     def chat1(self):
         if not current_user.is_authenticated:
-            # 记录用户请求的URL，并重定向到登录页面
             return redirect(url_for('AuthDBView.login', next=request.url))
-        return render_template('bot1.html')
+        return self.render_template('bot1.html')
 
-    @expose('chat2')
+    @expose('/chat2')
     def chat2(self):
         if not current_user.is_authenticated:
-            # 记录用户请求的URL，并重定向到登录页面
             return redirect(url_for('AuthDBView.login', next=request.url))
-        return render_template('bot2.html')
+        return self.render_template('bot2.html')
 
-    @expose('chat3')
+    @expose('/chat3')
     def chat3(self):
         if not current_user.is_authenticated:
-            # 记录用户请求的URL，并重定向到登录页面
             return redirect(url_for('AuthDBView.login', next=request.url))
-        return render_template('bot3.html')
+        return self.render_template('bot3.html')
+
+    @expose('/execute_script')
+    def trigger_script(self):
+        if not current_user.is_authenticated:
+            return redirect(url_for('AuthDBView.login', next=request.url))
+        result = subprocess.run(['python', 'rpa.py'], capture_output=True, text=True)
+        output = result.stdout
+        error = result.stderr
+        return jsonify({'msg': output or error, 'status': 0})
+
+    @protect()
+    @expose('/action_browser')
+    def action_browser(self):
+        if not current_user.is_authenticated:
+            return redirect(url_for('AuthDBView.login', next=request.url))
+        driver = webdriver.Chrome()
+        driver.get('https://www.baidu.com')
+        search = driver.find_element(By.ID, "kw")
+        search.send_keys('LLM')
+        send_button = driver.find_element(By.ID, "su")
+        send_button.click()
+        time.sleep(3)
+        driver.quit()
+        return jsonify({'msg': 'action browser success', 'status': 0})
 
 
-appbuilder.add_api(ChatApi)
+# 修改后的配置
+appbuilder.add_view(
+    ChatView,
+    "Chat Bot 1",
+    href="/chatview/chat1",  # 修改 href 路径
+    icon="fa-comments",
+    category="聊天机器人",
+    category_icon="fa-robot"
+)
+
+appbuilder.add_view(
+    ChatView,
+    "Chat Bot 2",
+    href="/chatview/chat2",  # 修改 href 路径
+    icon="fa-comments",
+    category="聊天机器人",
+    category_icon="fa-robot"
+)
+
+appbuilder.add_view(
+    ChatView,
+    "Chat Bot 3",
+    href="/chatview/chat3",  # 修改 href 路径
+    icon="fa-comments",
+    category="聊天机器人",
+    category_icon="fa-robot"
+)
+
+appbuilder.add_view(
+    ChatView,
+    "执行脚本",
+    href="/chatview/execute_script",  # 修改 href 路径
+    icon="fa-play",
+    category="聊天机器人",
+    category_icon="fa-robot"
+)
+
+appbuilder.add_view(
+    ChatView,
+    "浏览器操作",
+    href="/chatview/action_browser",  # 修改 href 路径
+    icon="fa-chrome",
+    category="聊天机器人",
+    category_icon="fa-robot"
+)
+
 db.create_all()
