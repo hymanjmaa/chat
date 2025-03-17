@@ -1,3 +1,4 @@
+import random
 import subprocess
 import time
 
@@ -99,10 +100,17 @@ class ChatView(BaseView):
     def trigger_script(self):
         # if not current_user.is_authenticated:
         #     return redirect(url_for('AuthDBView.login', next=request.url))
+        order_num = request.args.get('order_num', random.choice(['20250317118', '20250317119',
+                                                                 '20250317120', '20250317121']))
         result = subprocess.run(['python', 'rpa.py'], capture_output=True, text=True)
         output = result.stdout
         error = result.stderr
-        return jsonify({'msg': output or error, 'status': 0})
+        order_info = {
+            'order_num': order_num,
+            'order_status': random.choice(['Init', 'Packing', 'Delivering', 'Completed']),
+            'user': random.choice(['Alice', 'Bob', 'Charlie', 'David', 'Eve'])
+        }
+        return jsonify({'msg': output or error, 'status': 0, 'order_info': order_info})
 
     @protect()
     @expose('/action_browser')
