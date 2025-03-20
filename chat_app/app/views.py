@@ -128,7 +128,6 @@ class ChatView(BaseView):
         except Exception as e:
             return jsonify({'msg': f'系统错误: {str(e)}', 'status': 1})
 
-    @protect()
     @expose('/action_browser')
     def action_browser(self):
         # if not current_user.is_authenticated:
